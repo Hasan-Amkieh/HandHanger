@@ -12,6 +12,7 @@ ESP8266WiFiMulti wifiClient; // use (WiFiMulti.run() == WL_CONNECTED) to check t
 const char* moveXServerCommand = "http://192.168.4.1/moveX?angle=";
 const char* moveZServerCommand = "http://192.168.4.1/moveZ?angle=";
 
+
 #include <IRremoteESP8266.h>
 #include <IRsend.h>
 
@@ -19,7 +20,7 @@ const char* moveZServerCommand = "http://192.168.4.1/moveZ?angle=";
 
 
 const uint16_t kIrLed = D0; // which is GPIO 16
-IRsend irsend(kIrLed);
+//IRsend irsend(kIrLed);
 
 DigiPot pot(2, 0, 15); // D4, D3, D8 accordingly
 
@@ -38,7 +39,7 @@ String httpGETRequest(const char* url) {
   // Send HTTP POST request
   int httpResponseCode = http.GET();
   
-  String payload = "--"; 
+  String payload = "--";
   
   if (httpResponseCode>0) {
     Serial.print("HTTP Response code: ");
@@ -58,28 +59,40 @@ String httpGETRequest(const char* url) {
 void setup() {
 
   Serial.begin(9600);
-  irsend.begin();
+  //irsend.begin();
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("");
-  Serial.println("Connected to WiFi");
+  Serial.println("\nConnected to WiFi");
 
   Serial.println("Everything is set!");
 
-  //pinMode(D2, OUTPUT);
+  pot.set(70); // MIN is "27" and MAX is "99"
+
+  pinMode(D0, OUTPUT);
 }
 
 void loop() {
-  uint32_t data = moveCommand;
-  irsend.sendNEC(data, 32);
-  delay(2000);
 
-  /*digitalWrite(D2, HIGH);
+
+  /*uint32_t data = moveCommand;
+  irsend.sendNEC(data, 32);
+  delay(2000);*/
+
+  pot.increase(10);
+  digitalWrite(D0, HIGH);
   delay(2000);
-  digitalWrite(D2, LOW);
-  delay(1000);*/
+  digitalWrite(D0, LOW);
+  delay(1000);
+
+  Serial.printf("Steps: %d\n", pot.get());
+  if (pot.get() >= 99) {
+    Serial.println("Resetting to 0");
+    pot.reset();
+  }
+
+
 }
